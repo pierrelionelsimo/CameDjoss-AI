@@ -16,7 +16,7 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # Domaines autorisés à accéder à l'application
 # Autorise localhost, 127.0.0.1 et "backend" (nom du service Docker)
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "*"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "*", " :.onrender.com"]
 
 # Applications installées dans le projet
 INSTALLED_APPS = [
@@ -94,6 +94,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # ── CORS production ───────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://camedjoss-ai.vercel.app",
     # On ajoutera l'URL Vercel après le déploiement frontend
 ]
 

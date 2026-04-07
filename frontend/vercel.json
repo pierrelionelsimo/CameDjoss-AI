@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://TON_SERVICE_RENDER.onrender.com/api/:path*"
+      "destination": "https://camedjoss-backend.onrender.com/api/:path*"
     }
   ]
 }
