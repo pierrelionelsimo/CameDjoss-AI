@@ -1,0 +1,43 @@
+services:
+
+  db:
+    image: postgres:15
+    restart: always
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    # Vérifie que PostgreSQL est prêt avant d'autoriser le backend à démarrer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatbot_user -d chatbot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: always
+    env_file: .env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    # Attend que la DB soit vraiment prête (healthcheck vert)
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
