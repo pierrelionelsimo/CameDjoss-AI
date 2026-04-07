@@ -16,14 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
-from django.http import HttpResponse  # <- importer HttpResponse
+from django.http import HttpResponse
 
 def home(request):
     return HttpResponse("Backend Django est en ligne !")
 
 urlpatterns = [
-    path("", home),  # racine /
+    path("", home),  # ← racine / 
     path("admin/", admin.site.urls),
     path("api/", include("chatbot.urls")),
 ]
