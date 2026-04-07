@@ -17,8 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from django.http import HttpResponse  # <- importer HttpResponse
+
+def home(request):
+    return HttpResponse("Backend Django est en ligne !")
+
 urlpatterns = [
+    path("", home),  # racine /
     path("admin/", admin.site.urls),
-    # Toutes les URLs de l'app chatbot seront préfixées par /api/
     path("api/", include("chatbot.urls")),
 ]
