@@ -35,6 +35,7 @@ MIDDLEWARE = [
     # CorsMiddleware DOIT être en premier pour intercepter les requêtes cross-origin
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -63,25 +64,42 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# Configuration PostgreSQL — toutes les valeurs viennent du fichier .env
-# PostgreSQL est plus robuste que SQLite pour un vrai projet
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        # "db" = nom du service PostgreSQL dans docker-compose.yml
-        "HOST": os.getenv("POSTGRES_HOST", "db"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
-    }
-}
+# ── Base de données ──────────────────────────────────────────────────────────
+# En production sur Render, DATABASE_URL est fourni automatiquement
+# En local, on utilise les variables individuelles du .env
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Autorise le frontend React (sur le port 5173) à appeler le backend
-# Sans ça, le navigateur bloquerait les requêtes (sécurité CORS)
+if DATABASE_URL:
+    # Production : Render fournit une URL complète PostgreSQL
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    # Local : on utilise les variables du .env
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB"),
+            "USER": os.getenv("POSTGRES_USER"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+            "HOST": os.getenv("POSTGRES_HOST", "db"),
+            "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        }
+    }
+
+# ── Fichiers statiques (Whitenoise) ──────────────────────────────────────────
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# ── CORS production ───────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    # On ajoutera l'URL Vercel après le déploiement frontend
 ]
+
+# Autorise aussi toutes les origines en dev
+CORS_ALLOW_ALL_ORIGINS = os.getenv("DEBUG", "False") == "True"
+
 
 # Langue et fuseau horaire adaptés au Cameroun
 LANGUAGE_CODE = "fr-fr"
@@ -89,7 +107,7 @@ TIME_ZONE = "Africa/Douala"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Configuration de Django REST Framework
@@ -99,3 +117,10 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
 }
+
+from pathlib import Path
+from dotenv import load_dotenv
+import os
+import dj_database_url
+
+load_dotenv()
