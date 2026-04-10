@@ -1,8 +1,15 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "https://camedjoss-backend.onrender.com/api/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
       "src": "/(.*)",
