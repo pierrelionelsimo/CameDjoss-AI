@@ -8,15 +8,16 @@ export function useChat() {
   const [isLoading, setIsLoading]           = useState(false);
   const [error, setError]                   = useState(null);
 
-  /** Charge toutes les conversations depuis le backend */
-  const loadConversations = useCallback(async () => {
-    try {
-      const data = await getConversations();
-      setConversations(data);
-    } catch {
-      setError('Impossible de charger les conversations');
-    }
-  }, []);
+const loadConversations = useCallback(async () => {
+  try {
+    const data = await getConversations();
+    // Sécurise contre toute réponse qui n'est pas un tableau
+    setConversations(Array.isArray(data) ? data : []);
+  } catch {
+    // Si Render est en veille ou erreur réseau — on met juste une liste vide
+    setConversations([]);
+  }
+}, []);
 
   /** Ouvre une conversation et affiche ses messages */
   const openConversation = useCallback((conv) => {
