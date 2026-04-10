@@ -93,14 +93,12 @@ else:
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# ── CORS production ───────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://camedjoss-ai.vercel.app",
-    # On ajoutera l'URL Vercel après le déploiement frontend
 ]
 
-# Autorise aussi toutes les origines en dev
+# Autorise toutes les origines en dev uniquement
 CORS_ALLOW_ALL_ORIGINS = os.getenv("DEBUG", "False") == "True"
 
 
