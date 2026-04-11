@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useChat } from './hooks/useChat';
 import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
@@ -13,18 +13,27 @@ export default function App() {
     deleteUserConversation,
   } = useChat();
 
-  /**
-   * Depuis l'écran d'accueil :
-   * 1. Crée une conversation
-   * 2. Envoie le message avec l'ID retourné directement
-   * (évite le problème de state asynchrone)
-   */
+  // Contrôle l'ouverture/fermeture de la sidebar sur mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const handleSendFromWelcome = useCallback(async (text) => {
     const newConv = await startNewConversation();
     if (newConv?.id) {
       await sendUserMessage(text, newConv.id);
     }
   }, [startNewConversation, sendUserMessage]);
+
+  // Ferme la sidebar automatiquement quand on sélectionne une conversation
+  const handleSelectConversation = useCallback((conv) => {
+    openConversation(conv);
+    setSidebarOpen(false); // Ferme sur mobile après sélection
+  }, [openConversation]);
+
+  // Ferme la sidebar après création d'une nouvelle conversation
+  const handleNewConversation = useCallback(async () => {
+    await startNewConversation();
+    setSidebarOpen(false);
+  }, [startNewConversation]);
 
   useEffect(() => {
     loadConversations();
@@ -33,42 +42,77 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#1a1a1a' }}>
 
-      {/* Sidebar */}
-      <Sidebar
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        onNewConversation={startNewConversation}
-        onSelectConversation={openConversation}
-        onDeleteConversation={deleteUserConversation}
-      />
+      {/* ── Overlay sombre derrière la sidebar sur mobile ── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 md:hidden"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      {/* Zone principale */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* ── Sidebar ── */}
+      {/* Sur desktop : toujours visible
+          Sur mobile : cachée par défaut, visible si sidebarOpen */}
+      <div
+        className={`
+          fixed inset-y-0 left-0 z-30 transition-transform duration-300 ease-in-out
+          md:relative md:translate-x-0 md:z-auto
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <Sidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onNewConversation={handleNewConversation}
+          onSelectConversation={handleSelectConversation}
+          onDeleteConversation={deleteUserConversation}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
+
+      {/* ── Zone principale ── */}
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
 
         {/* Header */}
         <header
-          className="flex items-center justify-between px-6 py-3 flex-shrink-0"
+          className="flex items-center justify-between px-4 py-3 flex-shrink-0"
           style={{ borderBottom: '1px solid #2a2a2a', background: '#1a1a1a' }}
         >
-          <span className="text-sm font-medium" style={{ color: '#888' }}>
-            {activeConversationId
-              ? (conversations.find(c => c.id === activeConversationId)?.title || 'Conversation')
-              : 'CameDjoss'
-            }
-          </span>
+          <div className="flex items-center gap-3">
+            {/* Bouton hamburger — visible uniquement sur mobile */}
+            <button
+              className="md:hidden flex flex-col gap-1 p-1"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <span className="w-5 h-0.5 rounded" style={{ background: '#888' }} />
+              <span className="w-5 h-0.5 rounded" style={{ background: '#888' }} />
+              <span className="w-5 h-0.5 rounded" style={{ background: '#888' }} />
+            </button>
+
+            <span className="text-sm font-medium truncate" style={{ color: '#888' }}>
+              {activeConversationId
+                ? (conversations.find(c => c.id === activeConversationId)?.title || 'Conversation')
+                : 'CameDjoss'
+              }
+            </span>
+          </div>
+
+          {/* Badge modèle */}
           <div
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs flex-shrink-0"
             style={{ background: '#2a2a2a', color: '#888' }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#4ade80' }} />
-            LLaMA 3.3 · Groq
+            <span className="hidden sm:inline">LLaMA 3.3 · Groq</span>
+            <span className="sm:hidden">LLaMA</span>
           </div>
         </header>
 
         {/* Erreur */}
         {error && (
           <div
-            className="mx-6 mt-3 px-4 py-2 rounded-lg text-xs"
+            className="mx-4 mt-3 px-4 py-2 rounded-lg text-xs"
             style={{ background: '#3a1a1a', border: '1px solid #6a2a2a', color: '#f87171' }}
           >
             ⚠️ {error}
@@ -91,7 +135,7 @@ export default function App() {
               <div
                 className="flex items-center gap-2 rounded-2xl px-4 py-3 cursor-text"
                 style={{ background: '#2f2f2f', border: '1px solid #3a3a3a' }}
-                onClick={startNewConversation}
+                onClick={handleNewConversation}
               >
                 <span className="text-sm" style={{ color: '#555' }}>
                   Envoyer un message à CameDjoss...

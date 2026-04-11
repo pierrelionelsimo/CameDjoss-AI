@@ -6,8 +6,8 @@ export default function Sidebar({
   onNewConversation,
   onSelectConversation,
   onDeleteConversation,
+  onClose,
 }) {
-  // On gère le hover manuellement avec un state au lieu de Tailwind group
   const [hoveredId, setHoveredId] = useState(null);
 
   return (
@@ -15,18 +15,33 @@ export default function Sidebar({
       className="flex flex-col h-full w-64 flex-shrink-0"
       style={{ background: '#171717', borderRight: '1px solid #2a2a2a' }}
     >
-      {/* Logo */}
+      {/* Logo + bouton fermer sur mobile */}
       <div className="px-4 pt-5 pb-4">
-        <div className="flex items-center gap-2 mb-4">
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-            style={{ background: 'linear-gradient(135deg, #c96442, #e8855d)', color: '#fff' }}
-          >
-            C
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+              style={{ background: 'linear-gradient(135deg, #c96442, #e8855d)', color: '#fff' }}
+            >
+              C
+            </div>
+            <span className="font-semibold text-sm" style={{ color: '#ececec' }}>
+              CameDjoss
+            </span>
           </div>
-          <span className="font-semibold text-sm" style={{ color: '#ececec' }}>
-            CameDjoss
-          </span>
+
+          {/* Bouton ✕ — visible uniquement sur mobile */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-1 rounded-lg transition-colors"
+            style={{ color: '#666' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#ececec'}
+            onMouseLeave={e => e.currentTarget.style.color = '#666'}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
 
         {/* Bouton nouvelle conversation */}
@@ -67,28 +82,22 @@ export default function Sidebar({
                   key={conv.id}
                   className="relative flex items-center rounded-lg mb-0.5 transition-all duration-150"
                   style={{
-                    background: isActive
-                      ? '#2a2a2a'
-                      : isHovered ? '#222' : 'transparent'
+                    background: isActive ? '#2a2a2a' : isHovered ? '#222' : 'transparent'
                   }}
-                  // Gestion du hover via state React — fiable sur toutes versions Tailwind
                   onMouseEnter={() => setHoveredId(conv.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
-                  {/* Bouton titre */}
                   <button
                     onClick={() => onSelectConversation(conv)}
                     className="flex-1 text-left px-3 py-2 text-sm truncate"
                     style={{
                       color: isActive ? '#ececec' : '#aaa',
-                      // Laisse de la place pour le bouton supprimer
                       paddingRight: isHovered ? '2rem' : '0.75rem',
                     }}
                   >
                     {conv.title || 'Nouvelle conversation'}
                   </button>
 
-                  {/* Bouton supprimer — visible uniquement si hover */}
                   {isHovered && (
                     <button
                       onClick={(e) => {
